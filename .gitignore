@@ -1,0 +1,6 @@
+# Ignore the build directory
+/build
+
+# Ignore the VSCode workspace
+toddlerBox.code-workspace
+.vscode
