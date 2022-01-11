@@ -4,159 +4,258 @@
  * Author       : Rowland Marshall
  * 
  * Versions     :
+ *    1.00  | 2022-01-11 00:00:32 - First version of the puzzlebox complete.  A simple 'match the colour' game, resulting in flashing lights & a small tune
+ *    0.01b | 2022-01-10 15:13:04 - lightquiz branch - building a simple game where a light is presented to the user and they have to push the corresponding coloured button.
  *    0.01a | 2022-01-06 16:22:19 - piano branch - ref https://learn.sparkfun.com/tutorials/sik-keyboard-instrument/all
  *    0.01  | 2022-01-06 14:49:26 - initial file
  ****************************************************/
 
-// Load the LiquidCrystal library, which will give us commands to interface to the LCD:
-#include <LiquidCrystal.h>
-
-// Initialize the library with the pins we're using. See http://arduino.cc/en/Reference/LiquidCrystal
-LiquidCrystal lcd(12,11,5,4,3,2);
-
-// Make custom characters:
-byte Heart[] = { // Byte 0
-  B00000,
-  B01010,
-  B11111,
-  B11111,
-  B01110,
-  B00100,
-  B00000,
-  B00000
-};
-
-byte EmptyHeart[] = { // Byte 1
-  B00000,
-  B01010,
-  B10101,
-  B10001,
-  B01010,
-  B00100,
-  B00000,
-  B00000
-};
-
 // Constants
-const int SENSOR_PIN = 0;   // Analog input pin for soft pot
-const int BUZZER_PIN = 9;   // PWM digital output pin for buzzer
-const int DURATION = 10;    // Time (ms) to play a note
+// buzzer song for victory note (song )
+const int buzzerPin = 5;    // connect the buzzer to pin 5
+
+//buttons
+const int BUTTON_WHITE = 0;
+const int BUTTON_RED = 1;
+const int BUTTON_YELLOW = 2;
+const int BUTTON_GREEN = 3;
+const int BUTTON_BLUE = 4;
+
+//button states as an array
+int buttonStates[] = {0, 0, 0, 0, 0};
+
+// RGB LED
+const int MULTI_RED_PIN = 13;
+const int MULTI_GREEN_PIN = 12;
+const int MULTI_BLUE_PIN = 11;
+
+// Button LEDs
+const int LED_WHITE_PIN = 6;
+const int LED_RED_PIN = 7;
+const int LED_YELLOW_PIN = 8;
+const int LED_GREEN_PIN = 9;
+const int LED_BLUE_PIN = 10;
 
 void setup()  
 {
-  // init LCD to 2 lines of 16 char and clear
-  lcd.begin(16, 2);
-  lcd.clear();
+  // intialize pins
+  pinMode(BUTTON_WHITE, INPUT);
+  pinMode(BUTTON_RED, INPUT);
+  pinMode(BUTTON_YELLOW, INPUT);
+  pinMode(BUTTON_GREEN, INPUT);
+  pinMode(BUTTON_BLUE, INPUT);
 
-  lcd.print("tddlrBx v0.01a");
+  pinMode(MULTI_RED_PIN, OUTPUT);
+  pinMode(MULTI_GREEN_PIN, OUTPUT);
+  pinMode(MULTI_BLUE_PIN, OUTPUT);
 
-   // Create a new characters:
-  lcd.createChar(0, Heart);
-  lcd.createChar(1, EmptyHeart);
+  pinMode(LED_WHITE_PIN, OUTPUT);
+  pinMode(LED_RED_PIN, OUTPUT);
+  pinMode(LED_GREEN_PIN, OUTPUT);
+  pinMode(LED_YELLOW_PIN, OUTPUT);
+  pinMode(LED_BLUE_PIN, OUTPUT);
 
-  // Set the buzzer pin as an output
-  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(buzzerPin, OUTPUT); //buzzer pin for song
+
+  //randomize the random with the randomness
+  randomSeed(analogRead(0));
 }
 
 void loop()
 {
-    /* 2022-01-06 16:30:52 commenting out to test original piano file
-    // Flashing heart to start as "Hello World"
-    lcd.setCursor(15,1);
-    lcd.write(byte(0)); // print 
-    
-    // delay 1000ms = 1sec 
-    delay(1000);
+  // initialise multicolour LED intensity
+  int colourIntensity[3] = {0,0,0}; 
 
-    // Flashing heart to start as "Hello World"
-    lcd.setCursor(15,1);
-    lcd.write(byte(1)); // print 
-    
-    // delay 1000ms = 1sec 
-    delay(1000);
-    */
-  int sensorValue;
-  char note = 0;
-  int freq;
+  // initialise a game run
+  int colourArray[] = {0,0,0,0,0};  // array of colour choices
+  bool correctAnswer = false; // flag for a correct selection
 
-  // Read the value (0 - 1023) from the ADC
-  sensorValue = analogRead(SENSOR_PIN);
+  // pick a game colour
+  int colourPick = random(0,5);  // pick a random colour (upper bound is exclusive)
+  colourArray[colourPick] = 1; // set a bit in the array so we can do easy compares later
 
-  // Map the key pressed to a note
-  note = findNote(sensorValue);
+  // set the RGB LED to the game colour
+  colourSet(colourPick, colourIntensity);
+  analogWrite(MULTI_RED_PIN, colourIntensity[0]);
+  analogWrite(MULTI_GREEN_PIN, colourIntensity[1]);
+  analogWrite(MULTI_BLUE_PIN, colourIntensity[2]);
 
-  // If it's a note, play it!
-  if ( note != 0 ) {
-    freq = getFrequency(note);
-    tone(BUZZER_PIN, freq, DURATION);
-    delay(DURATION);
-  }
-}
+  // wait for inputs from the user until they give a correct answer
+  while (correctAnswer == false) {
+    // read in the button states
+    buttonStates[BUTTON_WHITE] = 1 - digitalRead(BUTTON_WHITE);
+    buttonStates[BUTTON_RED]  = 1 - digitalRead(BUTTON_RED);
+    buttonStates[BUTTON_YELLOW]  = 1 - digitalRead(BUTTON_YELLOW);
+    buttonStates[BUTTON_GREEN]  = 1 - digitalRead(BUTTON_GREEN);
+    buttonStates[BUTTON_BLUE]  = 1 - digitalRead(BUTTON_BLUE);
 
-// Given an ADC value (0 - 1023), map it to a note
-char findNote(int val)
-{
+    // turn on the corresponding LEDs
+    digitalWrite(LED_WHITE_PIN, buttonStates[BUTTON_WHITE]);
+    digitalWrite(LED_RED_PIN, buttonStates[BUTTON_RED]);
+    digitalWrite(LED_YELLOW_PIN, buttonStates[BUTTON_YELLOW]);
+    digitalWrite(LED_GREEN_PIN, buttonStates[BUTTON_GREEN]);
+    digitalWrite(LED_BLUE_PIN, buttonStates[BUTTON_BLUE]);
 
-  // Return the note based on the key pressed
-  if ( (val > 10) && (val <= 160) )
-  {
-    return 'c';
-  }
-  if ( (val > 160) && (val <= 250) )
-  {
-    return 'd';
-  }
-  if ( (val > 250) && (val <= 350) )
-  {
-    return 'e';
-  }
-  if ( (val > 350) && (val <= 450) )
-  {
-    return 'f';
-  }
-  if ( (val > 450) && (val <= 560) )
-  {
-    return 'g';
-  }
-  if ( (val > 560) && (val <= 690) )
-  {
-    return 'a';
-  }
-  if ( (val > 690) && (val <= 850) )
-  {
-    return 'b';
-  }
-  if ( (val > 850) && (val <= 1023) )
-  {
-    return 'C';
-  }
-
-  // Return 0 to show that no key was pressed
-  return 0;
-}
-
-// Translate a note (a, b, c, d, e, f, g) to its frequency
-int getFrequency(char note) 
-{
-  int i;
-  const int numNotes = 8;  // number of notes we're storing
-
-  // Arrays containing our notes and frequencies
-  char names[] = { 'c', 'd', 'e', 'f', 'g', 'a', 'b', 'C' };
-  int frequencies[] = {262, 294, 330, 349, 392, 440, 494, 523};
-
-  // Step though the notes
-  for (i = 0; i < numNotes; i++)  // Step through the notes
-  {
-
-    // If it matches a note in our list, return the frequency
-    if (names[i] == note)
+    // see if the correct button (colour) was selected.  If yes, celebrate and reset the game
+    if (array_cmp(buttonStates, colourArray, sizeof buttonStates / sizeof buttonStates[0], sizeof colourArray / sizeof colourArray[0]))
     {
-      return(frequencies[i]);
+      winCelebration();  // correct answer - celebrate!
+      correctAnswer = true; // force reset of the game
     }
   }
+}
 
-  // If we looked through everything and didn't find a note,
-  // return 0, as we still need to return something.
-  return(0);
+/******************************************************************
+ * void colourSet(int colour, int (& colourArray) [3] )
+ * 
+ * A 'quick' (?) way to have an index of colours.  currently using 
+ * cases...It would be better with arrays or lookups I guess.  I 
+ * kinda also realized just as I'd finished that I could have used 
+ * digitalwrites to solve the same problem as I'm using fixed 
+ * colours...but eh.
+/*****************************************************************/
+void colourSet(int colour, int (& colourArray) [3] )
+{
+  switch (colour) {
+    case 0: //white
+      colourArray[0] = 255;
+      colourArray[1] = 255;
+      colourArray[2] = 255;
+      break;
+    case 1: //red
+      colourArray[0] = 255;
+      colourArray[1] = 0;
+      colourArray[2] = 0;
+      break;
+    case 2: //yellow
+      colourArray[0] = 255;
+      colourArray[1] = 255;
+      colourArray[2] = 0;
+      break;
+    case 3: //green
+      colourArray[0] = 0;
+      colourArray[1] = 255;
+      colourArray[2] = 0;
+      break;
+    case 4: //blue
+      colourArray[0] = 0;
+      colourArray[1] = 0;
+      colourArray[2] = 200;
+      break;
+    default: //nothing (black)
+      colourArray[0] = 0;
+      colourArray[1] = 0;
+      colourArray[2] = 0;
+      break;
+  }
+}
+
+/******************************************************************
+ * boolean array_cmp(int *a, int *b, int len_a, int len_b){
+ * 
+ * Compare two arrays
+ * 
+ * Sauce: https://forum.arduino.cc/t/comparing-two-arrays/5211/2
+/*****************************************************************/
+boolean array_cmp(int *a, int *b, int len_a, int len_b){
+      int n;
+
+      // if their lengths are different, return false
+      if (len_a != len_b) return false;
+
+      // test each element to be the same. if not, return false
+      for (n=0;n<len_a;n++) if (a[n]!=b[n]) return false;
+
+      //ok, if we have not returned yet, they are equal :)
+      return true;
+}
+
+/******************************************************************
+ * void winCelebration()
+ * 
+ * Plays songs and flashes the lights for a victory dance!
+ * 
+ * Modified from sauce: https://learn.sparkfun.com/tutorials/sik-experiment-guide-for-arduino---v33/experiment-11-using-a-piezo-buzzer 
+/*****************************************************************/
+void winCelebration()
+{
+  const int songLength = 19;  // sets the number of notes of the song
+
+  // Notes is an array of text characters corresponding to the notes
+  // in your song. A space represents a rest (no tone)
+
+  // with thanks to John Towner Williams
+  char notes[songLength] = {
+    'd', 'd', 'd', 'g', 'D', 'C', 'b', 'a', 'G', 'D', 'C', 'b', 'a', 'G', 'D', 'C', 'b', 'C', 'a'}; 
+
+  // beats[] is an array of values for each note. A "1" represents a quarter-note, 
+  // "2" a half-note, and "4" a quarter-note.
+  // Don't forget that the rests (spaces) need a length as well.
+
+  int beats[songLength] = {
+    1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3};
+
+  int tempo = 120;  // The tempo is how fast to play the song (beats per second).
+  int i, duration; //
+
+  for (i = 0; i < songLength; i++) // for loop is used to index through the arrays
+  {
+    duration = beats[i] * tempo;  // length of note/rest in ms
+
+    if (notes[i] == ' ')          // is this a rest? 
+      delay(duration);            // then pause for a moment
+    else                          // otherwise, play the note
+    {
+      tone(buzzerPin, frequency(notes[i]), duration);
+      delay(duration);            // wait for tone to finish
+    }
+    delay(tempo/10);              // brief pause between notes
+  }
+
+  // victory lights!  I'm too lazy to integrate them in parallel with the song
+  for (int i = 0; i < 5; i++)
+  {
+    digitalWrite(LED_WHITE_PIN, HIGH);
+    digitalWrite(LED_RED_PIN, HIGH);
+    digitalWrite(LED_YELLOW_PIN, HIGH);
+    digitalWrite(LED_GREEN_PIN, HIGH);
+    digitalWrite(LED_BLUE_PIN, HIGH);
+    delay(200);
+    digitalWrite(LED_WHITE_PIN, LOW);
+    digitalWrite(LED_RED_PIN, LOW);
+    digitalWrite(LED_YELLOW_PIN, LOW);
+    digitalWrite(LED_GREEN_PIN, LOW);
+    digitalWrite(LED_BLUE_PIN, LOW);
+    delay(200);
+  }
+}
+
+/******************************************************************
+ * int frequency(char note) 
+ * 
+ * Get the frequency, Kenneth.
+ * 
+ * Modified from sauce: https://learn.sparkfun.com/tutorials/sik-experiment-guide-for-arduino---v33/experiment-11-using-a-piezo-buzzer 
+/*****************************************************************/
+int frequency(char note) 
+{
+  int i;
+  const int numNotes = 12;  // number of notes we're storing
+  char names[numNotes] = { 
+    'c', 'd', 'e', 'f', 'g', 'a', 'b', 'C', 'D', 'E', 'F', 'G'   };
+  int frequencies[numNotes] = {
+    262, 294, 330, 349, 392, 440, 494, 523, 587, 659, 698, 784   };
+
+  // Now we'll search through the letters in the array, and if
+  // we find it, we'll return the frequency for that note.
+
+  for (i = 0; i < numNotes; i++)  // Step through the notes
+  {
+    if (names[i] == note)         // Is this the one?
+    {
+      return(frequencies[i]);     // Yes! Return the frequency and exit function.
+    }
+  }
+  return(0);  // We looked through everything and didn't find it,
+  // but we still need to return a value, so return 0.
 }
