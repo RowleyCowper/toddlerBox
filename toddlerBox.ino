@@ -179,23 +179,26 @@ boolean array_cmp(int *a, int *b, int len_a, int len_b){
 /*****************************************************************/
 void winCelebration()
 {
-  const int songLength = 19;  // sets the number of notes of the song
-
+  // star wars const int songLength = 19;  // sets the number of notes of the song
+  const int songLength = 43; // ABC song
   // Notes is an array of text characters corresponding to the notes
   // in your song. A space represents a rest (no tone)
 
   // with thanks to John Towner Williams
-  char notes[songLength] = {
-    'd', 'd', 'd', 'g', 'D', 'C', 'b', 'a', 'G', 'D', 'C', 'b', 'a', 'G', 'D', 'C', 'b', 'C', 'a'}; 
-
   // beats[] is an array of values for each note. A "1" represents a quarter-note, 
   // "2" a half-note, and "4" a quarter-note.
   // Don't forget that the rests (spaces) need a length as well.
-
+  // char notes[songLength] = {
+  //   'd', 'd', 'd', 'g', 'D', 'C', 'b', 'a', 'G', 'D', 'C', 'b', 'a', 'G', 'D', 'C', 'b', 'C', 'a'}; 
+  // int beats[songLength] = {
+  //   1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3};
+  //ABCD song  
+  char notes[songLength] = {
+    'c', 'c', 'g', 'g', 'a', 'a', 'g', 'f', 'f', 'e', 'e', 'd', 'd', 'd', 'd', 'c', 'g', 'g', 'f', 'e', 'e', 'd', 'g', 'g', 'g', 'f', 'e', 'e', 'd', 'c', 'c', 'g', 'g', 'a', 'a', 'g', 'f', 'f', 'e', 'e', 'd', 'd', 'c'}; 
   int beats[songLength] = {
-    1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3, 3, 1, 1, 1, 3};
+      2,   2,   2,   2,   2,   2,   4,   2,   2,   2,   2,   1,   1,   1,   1,   4,   2,   2,   4,   2,   2,   4,   1,   1,   2,   4,   2,   2,   4,   2,   2,   2,   2,   2,   2,   4,   2,   2,   2,   2,   2,   2,   4};
 
-  int tempo = 120;  // The tempo is how fast to play the song (beats per second).
+  int tempo = 180;  // The tempo is how fast to play the song (beats per second).
   int i, duration; //
 
   for (i = 0; i < songLength; i++) // for loop is used to index through the arrays
