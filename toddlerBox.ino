@@ -198,7 +198,7 @@ void winCelebration()
   int beats[songLength] = {
       2,   2,   2,   2,   2,   2,   4,   2,   2,   2,   2,   1,   1,   1,   1,   4,   2,   2,   4,   2,   2,   4,   1,   1,   2,   4,   2,   2,   4,   2,   2,   2,   2,   2,   2,   4,   2,   2,   2,   2,   2,   2,   4};
 
-  int tempo = 180;  // The tempo is how fast to play the song (beats per second).
+  int tempo = 180;  //120 for star wars // The tempo is how fast to play the song (beats per second).
   int i, duration; //
 
   for (i = 0; i < songLength; i++) // for loop is used to index through the arrays
